@@ -1,0 +1,28 @@
+---
+## ansible-vault this file
+gateway_admin_password: XXXXXXXXXXXXXXXXXXXX
+gateway_pg_host: db1.example.org
+gateway_pg_database: gateway
+gateway_pg_username: gateway
+gateway_pg_password: XXXXXXXXXXXXXXXXXXXX
+#
+controller_admin_password: XXXXXXXXXXXXXXXXXXXX
+controller_pg_host: db1.example.org
+controller_pg_database: awx
+controller_pg_username: awx
+controller_pg_password: XXXXXXXXXXXXXXXXXXXX
+#
+hub_admin_password: XXXXXXXXXXXXXXXXXXXX
+hub_pg_host: db2.example.org
+hub_pg_database: pulp
+hub_pg_username: pulp
+hub_pg_password: XXXXXXXXXXXXXXXXXXXX
+#
+eda_admin_password: XXXXXXXXXXXXXXXXXXXX
+eda_pg_host: db2.example.org
+eda_pg_database: eda
+eda_pg_username: eda
+eda_pg_password: XXXXXXXXXXXXXXXXXXXX
+#
+postgresql_admin_username: postgres
+postgresql_admin_password: XXXXXXXXXXXXXXXXXXXX

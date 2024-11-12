@@ -1,0 +1,149 @@
+## 10/16/2024 
+## reference: https://www.postgresql.org/download/linux/redhat/ 
+
+
+sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+sudo dnf -qy module disable postgresql
+sudo dnf install -y postgresql15-server
+sudo /usr/pgsql-15/bin/postgresql-15-setup initdb
+sudo systemctl enable postgresql-15
+sudo systemctl start postgresql-15
+
+
+# add to postgres user HOME dir 
+##
+[postgres@test-dev-ef848b35dba9c3c5 ~]$ cat ~/.psqlrc
+\set PROMPT1 '%/@%M %# '
+[postgres@test-dev-ef848b35dba9c3c5 ~]$
+
+
+
+# set password for postgres user 
+##
+[postgres@main-dev-805f654d0e6777ca data]$ psql
+psql (15.8)
+Type "help" for help.
+
+postgres=# alter user postgres with password 'XXXXXXXXXXXXXXXXXXXX' ;
+ALTER ROLE
+postgres=# \q
+
+
+
+
+## 
+## add to /var/lib/pgsql/15/data/pg_hba.conf
+host    all             all             10.10.10.10/28       scram-sha-256
+
+
+# update list_address in postgresql.conf
+##
+[root@main-dev-805f654d0e6777ca data]# pwd
+/var/lib/pgsql/15/data
+[root@main-dev-805f654d0e6777ca data]# grep listen_address postgresql.conf
+listen_addresses = 'localhost,10.10.10.10'
+[root@main-dev-805f654d0e6777ca data]#
+
+## restart postgresql-15
+[root@db-1 data]# sudo systemctl restart postgresql-15
+[root@db-1 data]# sudo systemctl status postgresql-15
+
+
+
+## create test ... example
+[postgres@main-dev-805f654d0e6777ca ~]$ /usr/pgsql-15/bin/createdb test
+[postgres@main-dev-805f654d0e6777ca ~]$ /usr/pgsql-15/bin/psql test
+psql (15.8)
+Type "help" for help.
+
+test=#
+
+
+# install postgres15-contrib
+##
+$ sudo yum install https://download.postgresql.org/pub/repos/yum/15/redhat/rhel-9-x86_64/postgresql15-contrib-15.8-1PGDG.rhel9.x86_64.rpm
+
+
+# create hstore extension:
+##
+[user@main-dev-805f654d0e6777ca pg]$ sudo su - postgres
+Last login: Thu Oct 17 07:43:40 UTC 2024 on pts/1
+[postgres@main-dev-805f654d0e6777ca ~]$ psql
+psql (15.8)
+Type "help" for help.
+
+postgres=# CREATE EXTENSION hstore;
+CREATE EXTENSION
+postgres=# SELECT * FROM pg_available_extensions WHERE name='hstore';
+  name  | default_version | installed_version |                     comment
+--------+-----------------+-------------------+--------------------------------------------------
+ hstore | 1.8             | 1.8               | data type for storing sets of (key, value) pairs
+(1 row)
+
+postgres=# \q
+[postgres@main-dev-805f654d0e6777ca ~]$
+
+
+
+
+
+#### 
+## create db and users 
+##
+sudo su - postgres
+psql 
+# db2
+/usr/pgsql-15/bin/createdb pulp
+/usr/pgsql-15/bin/createdb eda
+# db1
+/usr/pgsql-15/bin/createdb awx
+/usr/pgsql-15/bin/createdb gateway
+
+
+sudo su - postgres
+psql 
+postgres=# \c awx
+You are now connected to database "awx" as user "postgres".
+awx=#
+
+
+CREATE USER awx WITH PASSWORD 'XXXXXXXXXXXXXXXXXXXXX';
+GRANT ALL PRIVILEGES ON DATABASE awx TO awx;
+ALTER USER awx CREATEDB;
+ALTER DATABASE awx OWNER TO awx;
+
+CREATE USER gateway WITH PASSWORD 'XXXXXXXXXXXXXXXXXXXXX';
+GRANT ALL PRIVILEGES ON DATABASE gateway TO gateway;
+ALTER USER gateway CREATEDB;
+ALTER DATABASE gateway OWNER TO gateway;
+
+CREATE USER eda WITH PASSWORD 'XXXXXXXXXXXXXXXXXXXXX';
+GRANT ALL PRIVILEGES ON DATABASE eda TO eda;
+ALTER USER eda CREATEDB;
+ALTER DATABASE eda OWNER TO eda;
+
+CREATE USER pulp WITH PASSWORD 'XXXXXXXXXXXXXXXXXXXXX';
+GRANT ALL PRIVILEGES ON DATABASE pulp TO pulp;
+ALTER USER pulp CREATEDB;
+ALTER DATABASE pulp OWNER TO pulp;
+
+
+
+###  test connection
+##
+[postgres@test-dev-d40000882b851c72 ~]$ psql -h db1 -U awx -d awx
+Password for user awx:
+psql (15.8)
+Type "help" for help.
+
+awx@db1 > \quit
+[postgres@test-dev-d40000882b851c72 ~]$ psql -h db1 -U gateway -d gateway
+Password for user gateway:
+psql (15.8)
+Type "help" for help.
+
+gateway@db1 > \quit
+[postgres@test-dev-d40000882b851c72 ~]$
+
+
+####
